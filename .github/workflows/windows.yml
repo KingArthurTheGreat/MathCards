@@ -1,0 +1,58 @@
+name: Windows installer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: TypeScript strict
+        run: npm run typecheck
+      - name: Database, selection and backup tests
+        run: npm test
+      - name: Build frontend and Electron
+        run: npm run build
+      - name: Electron acceptance test
+        run: node scripts/e2e.mjs
+      - name: Package NSIS and portable (x64)
+        run: npx electron-builder --win nsis portable --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Smoke test packaged Windows app
+        run: node scripts/smoke-packaged.mjs release/win-unpacked/MathCards.exe
+      - name: Smoke test installed Windows app
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem release/MathCards-Setup-*.exe | Select-Object -First 1
+          $installDir = Join-Path $env:RUNNER_TEMP 'MathCardsInstalled'
+          $process = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$installDir" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer failed: $($process.ExitCode)" }
+          node scripts/smoke-packaged.mjs "$installDir/MathCards.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MathCards-Windows-x64
+          path: |
+            release/MathCards-Setup-*.exe
+            release/MathCards-Portable-*.exe
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-windows
+          path: test-results/
+          if-no-files-found: ignore
