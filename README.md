@@ -167,4 +167,4 @@ ZIP содержит `manifest.json` (format=`mathcards`, version=1) и `images/
 
 Локально защищённые переменные окружения используются командой `npm run dist:win:signed`. Обычная `npm run dist:win` доступна без сертификата. Это соответствует [настройкам подписи electron-builder](https://www.electron.build/code-signing.html); подпись не обещает немедленного исчезновения предупреждений SmartScreen.
 
-Уязвимые версии minimatch в зависимостях `app-builder-lib` и `@electron/universal` заменены точечными overrides на 11.0.8. Старые API других зависимостей не подменяются. Полный `npm audit` включён в CI.
+Уязвимые версии minimatch в зависимостях `app-builder-lib` и `@electron/universal` заменены override по диапазону уязвимых версий (>=7, <11.0.1) на 11.0.8. Старые API других зависимостей не подменяются. Полный `npm audit` включён в CI.
