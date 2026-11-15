@@ -1,3 +1,4 @@
+import { isDue } from '../../shared/scheduler';
 import {
   ArrowUpRight,
   BookOpen,
@@ -45,15 +46,17 @@ export function Home({
   onAll,
   onReview,
   onStudy,
+  onResume,
 }: {
   onDeck: (id: string) => void;
   onNew: () => void;
   onAll: () => void;
   onReview: () => void;
   onStudy: (ids: string[]) => void;
+  onResume: (id: string) => void;
 }) {
   const { data } = useStore();
-  const difficult = data.cards.filter((c) => c.lastRating === 'hard' || c.lastRating === 'unknown');
+  const difficult = data.cards.filter((c) => isDue(c));
   const recent = [...data.decks]
     .sort((a, b) => (b.openedAt ?? b.createdAt).localeCompare(a.openedAt ?? a.createdAt))
     .slice(0, 3);
@@ -74,6 +77,22 @@ export function Home({
         </div>
         <span className="date-label">{today}</span>
       </div>
+      {data.sessions
+        .filter((s) => !s.endedAt && s.cardIds.length > s.results.length)
+        .slice(0, 1)
+        .map((s) => (
+          <div className="panel resume-banner" key={s.id}>
+            <div>
+              <h3>Продолжить подготовку</h3>
+              <p className="muted small">
+                Оценено {s.results.length} из {s.cardIds.length} карточек. Результаты сохранены.
+              </p>
+            </div>
+            <button onClick={() => onResume(s.id)} className="primary">
+              Продолжить сессию
+            </button>
+          </div>
+        ))}
       <section className="hero">
         <div className="hero-copy">
           <span className="pill">

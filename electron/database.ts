@@ -23,6 +23,7 @@ import {
 } from '../shared/model';
 import { schemas, mediaName } from '../shared/validation';
 import { demoDecks } from './demo';
+import { scheduleFromReviews } from '../shared/scheduler';
 const now = () => new Date().toISOString();
 type Row = Record<string, any>;
 export class Repository {
@@ -37,7 +38,7 @@ export class Repository {
       'PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;',
     );
     const version = Number((this.db.prepare('PRAGMA user_version').get() as Row).user_version);
-    if (version > 1)
+    if (version > 2)
       throw new Error('База создана более новой версией MathCards. Обновите приложение.');
     if (version === 0)
       this.db.exec(`BEGIN;
@@ -56,6 +57,16 @@ export class Repository {
       CREATE INDEX results_card ON results(cardId,reviewedAt);
       CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
       PRAGMA user_version=1; COMMIT;`);
+    if (version < 2)
+      this.transaction(() => {
+        this.db.exec(`CREATE TABLE review_state(
+        cardId TEXT PRIMARY KEY REFERENCES cards(id) ON DELETE CASCADE,
+        repetitions INTEGER NOT NULL, intervalDays INTEGER NOT NULL, ease REAL NOT NULL,
+        dueAt TEXT NOT NULL, reviewedAt TEXT NOT NULL);
+        CREATE INDEX review_due ON review_state(dueAt);`);
+        for (const card of this.all('SELECT id FROM cards')) this.rebuildSchedule(card.id);
+        this.db.exec('PRAGMA user_version=2');
+      });
     this.cleanupImages(true);
   }
   all(sql: string, ...params: (string | number)[]): Row[] {
@@ -79,6 +90,30 @@ export class Repository {
     if (!this.all(`SELECT id FROM ${table} WHERE id=?`, id).length)
       throw new Error('Запись не найдена. Обновите страницу.');
   }
+  rebuildSchedule(cardId: string) {
+    const events = this.all(
+      'SELECT rating,reviewedAt FROM results WHERE cardId=? ORDER BY reviewedAt,sessionId',
+      cardId,
+    );
+    const state = scheduleFromReviews(
+      events as { rating: Card['lastRating'] & string; reviewedAt: string }[],
+    );
+    if (!state) {
+      this.run('DELETE FROM review_state WHERE cardId=?', cardId);
+      return;
+    }
+    this.run(
+      `INSERT INTO review_state VALUES(?,?,?,?,?,?) ON CONFLICT(cardId) DO UPDATE SET
+      repetitions=excluded.repetitions,intervalDays=excluded.intervalDays,ease=excluded.ease,
+      dueAt=excluded.dueAt,reviewedAt=excluded.reviewedAt`,
+      cardId,
+      state.repetitions,
+      state.intervalDays,
+      state.ease,
+      state.dueAt,
+      state.reviewedAt,
+    );
+  }
   snapshot(): Snapshot {
     const decks = this.all('SELECT * FROM decks ORDER BY createdAt,id').map((d) => ({
       ...d,
@@ -88,6 +123,9 @@ export class Repository {
       'SELECT ct.cardId,t.name FROM card_tags ct JOIN tags t ON t.id=ct.tagId ORDER BY t.name',
     );
     const reviews = this.all('SELECT * FROM results ORDER BY reviewedAt');
+    const schedules = new Map(
+      this.all('SELECT * FROM review_state').map(({ cardId, ...schedule }) => [cardId, schedule]),
+    );
     const cards = this.all('SELECT * FROM cards ORDER BY createdAt,id').map((c) => {
       const r = reviews.filter((r) => r.cardId === c.id);
       return {
@@ -97,6 +135,7 @@ export class Repository {
         tags: tags.filter((t) => t.cardId === c.id).map((t) => t.name),
         lastRating: r.at(-1)?.rating ?? null,
         reviewCount: r.length,
+        schedule: schedules.get(c.id) ?? null,
       };
     }) as Card[];
     const collections = this.all('SELECT * FROM collections ORDER BY name').map((c) => ({
@@ -244,6 +283,7 @@ export class Repository {
             p.rating,
             now(),
           );
+          this.rebuildSchedule(p.cardId);
           break;
         }
         case 'endSession':

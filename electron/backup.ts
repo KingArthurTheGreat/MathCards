@@ -228,6 +228,7 @@ export function importArchive(repo: Repository, archive: Buffer): number {
             r.reviewedAt,
           );
       }
+      for (const id of cardMap.values()) repo.rebuildSchedule(id);
       // Keep local preferences when merging another person's deck.
     });
   } catch (err) {

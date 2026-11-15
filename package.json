@@ -1,6 +1,6 @@
 {
   "name": "mathcards",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Локальные карточки для изучения математического анализа",
   "main": "dist-electron/main.cjs",
   "scripts": {
@@ -12,10 +12,11 @@
     "build": "npm run typecheck && vite build && npm run build:electron",
     "start": "electron .",
     "test:e2e": "npm run build && node scripts/e2e.mjs",
-    "dist:win": "npm run build && electron-builder --win nsis portable --x64",
+    "dist:win": "npm run build && node scripts/build-windows.mjs",
     "pack:mac": "npm run build && electron-builder --mac --dir",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "dist:win:signed": "npm run build && node scripts/build-windows.mjs --signed"
   },
   "keywords": [],
   "author": "MathCards contributors",
@@ -106,5 +107,13 @@
   },
   "engines": {
     "node": ">=22.16.0"
+  },
+  "overrides": {
+    "app-builder-lib": {
+      "minimatch": "11.0.8"
+    },
+    "@electron/universal": {
+      "minimatch": "11.0.8"
+    }
   }
 }

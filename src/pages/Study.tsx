@@ -1,3 +1,4 @@
+import { scheduleFromReviews, scheduleReview } from '../../shared/scheduler';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, RotateCw, X, Check, Sparkles } from 'lucide-react';
 import type { Card, Rating } from '../../shared/model';
@@ -18,13 +19,26 @@ export function Study({
   const cards = session.cardIds
     .map((id) => data.cards.find((c) => c.id === id))
     .filter((c): c is Card => Boolean(c));
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    Math.max(
+      0,
+      cards.findIndex((c) => !session.results.some((r) => r.cardId === c.id)),
+    ),
+  );
   const [back, setBack] = useState(false);
   const [finished, setFinished] = useState(Boolean(session.endedAt));
   const busy = useRef(false);
   const [saving, setSaving] = useState(false);
   const content = useRef<HTMLDivElement>(null);
   const card = cards[index];
+  const day = new Date().toISOString().slice(0, 10);
+  const previous = scheduleFromReviews(
+    data.sessions
+      .flatMap((s) => s.results)
+      .filter((r) => r.cardId === card?.id && r.reviewedAt.slice(0, 10) < day),
+  );
+  const interval = (rating: Rating) =>
+    scheduleReview(previous, rating, new Date().toISOString()).intervalDays;
   useEffect(() => {
     setBack(false);
     content.current?.scrollTo(0, 0);
@@ -136,10 +150,13 @@ export function Study({
           <span className="eyebrow">СЕССИЯ ИЗУЧЕНИЯ</span>
           <h3>{data.decks.find((d) => d.id === card.deckId)?.name}</h3>
         </div>
-        <button onClick={() => void task(end)}>
-          <X size={17} />
-          Завершить
-        </button>
+        <div className="actions">
+          <button onClick={onClose}>Пауза</button>
+          <button onClick={() => void task(end)}>
+            <X size={17} />
+            Завершить
+          </button>
+        </div>
       </header>
       <div className="study-progress">
         <span>
@@ -181,6 +198,7 @@ export function Study({
               onClick={() => void task(() => rate('unknown'))}
             >
               Не знаю <kbd>1</kbd>
+              <small className="schedule-info">Через {interval('unknown')} дн.</small>
             </button>
             <button
               className="hard"
@@ -188,6 +206,7 @@ export function Study({
               onClick={() => void task(() => rate('hard'))}
             >
               Сложно <kbd>2</kbd>
+              <small className="schedule-info">Через {interval('hard')} дн.</small>
             </button>
             <button
               className="known"
@@ -195,6 +214,7 @@ export function Study({
               onClick={() => void task(() => rate('known'))}
             >
               Знаю <kbd>3</kbd>
+              <small className="schedule-info">Через {interval('known')} дн.</small>
             </button>
           </div>
         ) : (

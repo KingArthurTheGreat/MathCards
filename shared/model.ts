@@ -1,3 +1,4 @@
+import type { ReviewSchedule } from './scheduler';
 export const cardTypes = ['Определение', 'Теорема', 'Доказательство', 'Другое'] as const;
 export type CardType = (typeof cardTypes)[number];
 export type Rating = 'unknown' | 'hard' | 'known';
@@ -30,6 +31,7 @@ export interface Card {
   updatedAt: string;
   lastRating: Rating | null;
   reviewCount: number;
+  schedule: ReviewSchedule | null;
 }
 export interface Collection {
   id: string;

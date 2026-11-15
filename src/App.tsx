@@ -1,3 +1,4 @@
+import { isDue } from '../shared/scheduler';
 import { useRef, useState } from 'react';
 import {
   Home as HomeIcon,
@@ -96,16 +97,9 @@ export default function App() {
             >
               <Icon size={19} />
               {label}
-              {id === 'review' &&
-                data.cards.some((c) => c.lastRating === 'hard' || c.lastRating === 'unknown') && (
-                  <span className="nav-count">
-                    {
-                      data.cards.filter(
-                        (c) => c.lastRating === 'hard' || c.lastRating === 'unknown',
-                      ).length
-                    }
-                  </span>
-                )}
+              {id === 'review' && data.cards.some((c) => isDue(c)) && (
+                <span className="nav-count">{data.cards.filter((c) => isDue(c)).length}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -146,7 +140,7 @@ export default function App() {
             <SettingsIcon size={19} />
             Настройки
           </button>
-          <span className="version">MathCards · 1.0.0</span>
+          <span className="version">MathCards · 1.1.0</span>
         </div>
       </aside>
       <div className="main-area">
@@ -167,6 +161,7 @@ export default function App() {
             onAll={() => navigate('decks')}
             onReview={() => navigate('review')}
             onStudy={(ids) => start(ids)}
+            onResume={setSessionId}
           />
         )}
         {page === 'decks' && (
@@ -246,7 +241,7 @@ export default function App() {
             )}
           </main>
         )}
-        {page === 'stats' && <Statistics />}
+        {page === 'stats' && <Statistics onResume={setSessionId} />}
         {page === 'settings' && <Settings />}
       </div>
       {newDeck && <DeckForm onClose={() => setNewDeck(false)} onSave={openDeck} />}

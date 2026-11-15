@@ -1,3 +1,4 @@
+import { isDue, dueLabel } from '../../shared/scheduler';
 import { useMemo, useState } from 'react';
 import {
   Plus,
@@ -34,6 +35,8 @@ export function Cards({
   onDeleted: () => void;
 }) {
   const { data, call, task, notify } = useStore();
+  const [reviewTab, setReviewTab] = useState<'due' | 'difficult' | 'future'>('due');
+  const [existingCollection, setExistingCollection] = useState('');
   const [query, setQuery] = useState('');
   const [type, setType] = useState('');
   const [tag, setTag] = useState('');
@@ -51,7 +54,12 @@ export function Cards({
     (c) =>
       (!deck || c.deckId === deck.id) &&
       (!collection || collection.cardIds.includes(c.id)) &&
-      (!review || c.lastRating === 'hard' || c.lastRating === 'unknown'),
+      (!review ||
+        (reviewTab === 'due'
+          ? isDue(c)
+          : reviewTab === 'future'
+            ? !isDue(c)
+            : c.lastRating === 'hard' || c.lastRating === 'unknown')),
   );
   const cards = useMemo(
     () =>
@@ -94,7 +102,7 @@ export function Cards({
               (collection
                 ? 'Подборка ссылается на исходные карточки. Изменения синхронизируются автоматически.'
                 : review
-                  ? 'Карточки с последней оценкой «Сложно» и «Не знаю».'
+                  ? 'Расписание SM-2: новые карточки и те, которые пора повторить. Сложные можно повторять в любое время.'
                   : 'Ваши определения, теоремы и маленькие открытия.')}
           </p>
           <span className="small muted">
@@ -136,7 +144,11 @@ export function Cards({
               <button
                 title="Переименовать подборку"
                 className="icon-button"
-                onClick={() => setDialog('rename')}
+                onClick={() => {
+                  setExistingCollection('');
+                  setName(collection!.name);
+                  setDialog('rename');
+                }}
               >
                 <Pencil size={18} />
               </button>
@@ -155,6 +167,29 @@ export function Cards({
           </button>
         </div>
       </div>
+      {review && (
+        <div className="review-tabs">
+          {(
+            [
+              ['due', 'Пора повторить'],
+              ['difficult', 'Сложные и неизвестные'],
+              ['future', 'Запланированные'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              className={reviewTab === key ? 'active' : ''}
+              onClick={() => {
+                setReviewTab(key);
+                setSelected(new Set());
+                setAnchor(undefined);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="panel library">
         <div className="filters">
           <div className="search">
@@ -253,15 +288,20 @@ export function Cards({
                   </div>
                 </div>
                 <span className={`type-tag type-${cardTypes.indexOf(c.type)}`}>{c.type}</span>
-                <span className={`rating-dot ${c.lastRating ?? 'new'}`}>
-                  {c.lastRating === 'known'
-                    ? 'Знаю'
-                    : c.lastRating === 'hard'
-                      ? 'Сложно'
-                      : c.lastRating === 'unknown'
-                        ? 'Не знаю'
-                        : 'Новая'}
-                </span>
+                <div>
+                  <span className={`rating-dot ${c.lastRating ?? 'new'}`}>
+                    {c.lastRating === 'known'
+                      ? 'Знаю'
+                      : c.lastRating === 'hard'
+                        ? 'Сложно'
+                        : c.lastRating === 'unknown'
+                          ? 'Не знаю'
+                          : 'Новая'}
+                  </span>
+                  <span className="schedule-info" title={c.schedule?.dueAt}>
+                    {dueLabel(c)}
+                  </span>
+                </div>
                 <div className="row-actions">
                   <button
                     className="icon-button"
@@ -406,29 +446,59 @@ export function Cards({
           title={dialog === 'rename' ? 'Название подборки' : 'Сохранить подборку'}
           onClose={close}
         >
-          <label>
-            Название
-            <input
-              autoFocus
-              aria-label="Название подборки"
-              maxLength={300}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Повторить перед экзаменом"
-            />
-          </label>
+          {dialog === 'collection' && data.collections.length > 0 && (
+            <label>
+              Подборка
+              <select
+                aria-label="Добавить в подборку"
+                value={existingCollection}
+                onChange={(e) => setExistingCollection(e.target.value)}
+              >
+                <option value="">Создать новую</option>
+                {data.collections.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {!existingCollection && (
+            <label>
+              Название
+              <input
+                autoFocus
+                aria-label="Название подборки"
+                maxLength={300}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Повторить перед экзаменом"
+              />
+            </label>
+          )}
           <p className="muted small">Подборки хранят ссылки на карточки, не создавая копий.</p>
           <div className="modal-actions">
             <button onClick={close}>Отмена</button>
             <button
               className="primary"
-              disabled={!name.trim()}
+              disabled={!name.trim() && !existingCollection}
               onClick={() =>
                 void task(async () => {
                   await call('saveCollection', {
-                    id: dialog === 'rename' ? collection!.id : undefined,
-                    name,
-                    cardIds: dialog === 'rename' ? collection!.cardIds : chosen,
+                    id: dialog === 'rename' ? collection!.id : existingCollection || undefined,
+                    name: existingCollection
+                      ? data.collections.find((c) => c.id === existingCollection)!.name
+                      : name,
+                    cardIds:
+                      dialog === 'rename'
+                        ? collection!.cardIds
+                        : [
+                            ...new Set([
+                              ...(data.collections.find((c) => c.id === existingCollection)
+                                ?.cardIds ?? []),
+                              ...chosen,
+                            ]),
+                          ],
                   });
                   close();
                   notify('Подборка сохранена');

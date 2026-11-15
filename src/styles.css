@@ -1764,3 +1764,99 @@ kbd {
 .art-formula > .formula {
   font-size: inherit;
 }
+
+.resizable-image {
+  position: relative;
+  display: block;
+  margin: 18px 0;
+  max-width: 100%;
+  line-height: 0;
+}
+.tiptap .resizable-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+.resizable-image.is-selected {
+  outline: 2px solid var(--accent);
+  border-radius: 7px;
+}
+.resize-handle {
+  position: absolute;
+  z-index: 3;
+  padding: 0;
+  width: 13px;
+  height: 13px;
+  min-width: 13px;
+  border: 2px solid var(--accent);
+  border-radius: 3px;
+  background: var(--surface);
+  touch-action: none;
+}
+.resize-handle.nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+.resize-handle.ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+.resize-handle.sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+.resize-handle.se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+.image-width-label {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.schedule-info {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.ratings button {
+  flex-wrap: wrap;
+}
+.ratings .schedule-info {
+  width: 100%;
+  margin: 0;
+  color: inherit;
+  opacity: 0.8;
+}
+.review-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.review-tabs .active {
+  background: var(--soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.resume-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 22px;
+}

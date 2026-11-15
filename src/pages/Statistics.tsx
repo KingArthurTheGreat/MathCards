@@ -1,5 +1,5 @@
 import { useStore } from '../hooks/useStore';
-export function Statistics() {
+export function Statistics({ onResume }: { onResume: (id: string) => void }) {
   const { data } = useStore();
   const results = data.sessions.flatMap((s) => s.results);
   const total = results.length;
@@ -73,6 +73,9 @@ export function Statistics() {
                 </p>
               </div>
               <div className="actions">
+                {!s.endedAt && s.cardIds.length > 0 && (
+                  <button onClick={() => onResume(s.id)}>Продолжить сессию</button>
+                )}
                 {(['known', 'hard', 'unknown'] as const).map((r) => (
                   <span key={r} className={`rating-dot ${r}`}>
                     {s.results.filter((v) => v.rating === r).length}

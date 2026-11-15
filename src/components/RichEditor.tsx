@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
+import { ResizableImage } from './ResizableImage';
 import Mathematics from '@tiptap/extension-mathematics';
 import {
   Bold,
@@ -18,18 +18,6 @@ import type { Doc } from '../../shared/model';
 import { useStore } from '../hooks/useStore';
 import { Modal } from './Modal';
 import { Formula } from './Content';
-const ResizableImage = Image.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      width: {
-        default: 100,
-        parseHTML: () => 100,
-        renderHTML: (attrs) => ({ style: `width:${Number(attrs.width)}%;height:auto` }),
-      },
-    };
-  },
-});
 const symbols = [
   ['∀', '\\forall '],
   ['∃', '\\exists '],
@@ -209,6 +197,9 @@ export function RichEditor({
                   .run()
               }
             >
+              {![25, 50, 75, 100].includes(state.width) && (
+                <option value={state.width}>{state.width}%</option>
+              )}
               {[25, 50, 75, 100].map((n) => (
                 <option key={n} value={n}>
                   {n}%

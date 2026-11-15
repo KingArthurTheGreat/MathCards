@@ -1,6 +1,11 @@
 name: Windows installer
 on:
   workflow_dispatch:
+    inputs:
+      signed:
+        description: 'Подписать сертификатом из WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD Secrets'
+        type: boolean
+        default: false
   push:
     branches: [main, master]
     tags: ['v*']
@@ -19,6 +24,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
+      - name: Dependency security audit
+        run: npm audit
       - name: TypeScript strict
         run: npm run typecheck
       - name: Database, selection and backup tests
@@ -27,10 +34,24 @@ jobs:
         run: npm run build
       - name: Electron acceptance test
         run: node scripts/e2e.mjs
-      - name: Package NSIS and portable (x64)
-        run: npx electron-builder --win nsis portable --x64 --publish never
+      - name: Package unsigned NSIS and portable (x64)
+        if: ${{ !inputs.signed }}
+        run: node scripts/build-windows.mjs
+      - name: Package signed NSIS and portable (x64)
+        if: ${{ inputs.signed }}
+        run: node scripts/build-windows.mjs --signed
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      - name: Verify Authenticode signatures
+        if: ${{ inputs.signed }}
+        shell: pwsh
+        run: |
+          $files = @('release/win-unpacked/MathCards.exe') + @(Get-ChildItem release/MathCards-*.exe | ForEach-Object FullName)
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file
+            if ($signature.Status -ne 'Valid') { throw "Invalid Authenticode signature: $file" }
+          }
       - name: Smoke test packaged Windows app
         run: node scripts/smoke-packaged.mjs release/win-unpacked/MathCards.exe
       - name: Smoke test installed Windows app
@@ -44,7 +65,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
       - uses: actions/upload-artifact@v4
         with:
-          name: MathCards-Windows-x64
+          name: MathCards-Windows-x64-${{ inputs.signed && 'signed' || 'unsigned' }}
           path: |
             release/MathCards-Setup-*.exe
             release/MathCards-Portable-*.exe

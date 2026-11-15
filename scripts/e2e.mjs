@@ -17,6 +17,7 @@ const networkRequests = [];
 async function launch() {
   app = await electron.launch({
     args: ['.'],
+    timeout: 300000,
     env: { ...process.env, MATHCARDS_DATA_DIR: dir, MATHCARDS_DEV: '0' },
   });
   page = await app.firstWindow();
@@ -96,6 +97,21 @@ try {
   await expect(back.locator('img')).toHaveCount(1);
   await back.locator('img').click();
   await page.getByLabel('Размер изображения').selectOption('50');
+  const handle = page.getByRole('slider', { name: 'Нижний правый угол изображения' });
+  await handle.scrollIntoViewIfNeeded();
+  const before = await back.locator('img').boundingBox();
+  const corner = await handle.boundingBox();
+  await page.mouse.move(corner.x + corner.width / 2, corner.y + corner.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(corner.x + corner.width / 2 + 40, corner.y + corner.height / 2 + 25, {
+    steps: 6,
+  });
+  await page.mouse.up();
+  const resized = Number(await handle.getAttribute('aria-valuenow'));
+  expect(resized).toBeGreaterThan(50);
+  expect(resized).toBeLessThan(75);
+  const after = await back.locator('img').boundingBox();
+  expect(after.width / after.height).toBeCloseTo(before.width / before.height, 1);
   await page.getByRole('button', { name: 'Предпросмотр' }).click();
   await expect(page.getByRole('dialog').locator('img')).toHaveCount(1);
   await page.getByRole('dialog').getByRole('button', { name: 'Закрыть', exact: true }).click();
@@ -105,6 +121,7 @@ try {
   expect(s.cards).toHaveLength(1);
   expect(JSON.stringify(s.cards[0].back)).toContain('blockMath');
   expect(JSON.stringify(s.cards[0].back)).toContain('media://image/');
+  expect(s.cards[0].back.content.find((n) => n.type === 'image').attrs.width).toBe(resized);
   // Create nine additional cards through the same validated IPC used by the UI.
   await page.evaluate(async () => {
     const s = await window.mathcards.invoke('snapshot', undefined);
@@ -129,6 +146,11 @@ try {
   await page.getByRole('button', { name: 'В подборку', exact: true }).click();
   await page.getByLabel('Название подборки').fill('Билеты 1–5');
   await page.getByRole('button', { name: 'Сохранить подборку', exact: true }).click();
+  await page.getByRole('button', { name: 'В подборку', exact: true }).click();
+  await page.getByLabel('Добавить в подборку').selectOption((await snap()).collections[0].id);
+  await page.getByRole('button', { name: 'Сохранить подборку', exact: true }).click();
+  expect((await snap()).collections).toHaveLength(1);
+  expect((await snap()).collections[0].cardIds).toHaveLength(3);
   await page.getByRole('button', { name: 'Изучать выбранные' }).click();
   await expect(page.getByText('Карточка 1 / 3')).toBeVisible();
   await page.keyboard.press('Space');
@@ -140,6 +162,13 @@ try {
   await page.screenshot({ path: 'test-results/study.png', animations: 'disabled', scale: 'css' });
   await page.keyboard.press('1');
   await expect(page.getByText('Карточка 2 / 3')).toBeVisible();
+  await page.getByRole('button', { name: 'Пауза', exact: true }).click();
+  await app.close();
+  app = null;
+  await launch();
+  await page.getByRole('button', { name: 'Продолжить сессию', exact: true }).click();
+  await expect(page.getByText('Карточка 2 / 3')).toBeVisible();
+  expect((await snap()).cards.filter((c) => c.schedule)).toHaveLength(1);
   await page.keyboard.press('Space');
   await page.keyboard.press('2');
   await expect(page.getByText('Карточка 3 / 3')).toBeVisible();
@@ -150,6 +179,12 @@ try {
   await expect(page.getByText('Карточка 1 / 1')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Вернуться к карточкам' }).click();
+  await page.getByRole('button', { name: /^Повторение/ }).click();
+  await expect(page.locator('.card-row')).toHaveCount(7);
+  await page.getByRole('button', { name: 'Запланированные', exact: true }).click();
+  await expect(page.locator('.card-row')).toHaveCount(3);
+  await page.getByRole('button', { name: 'Сложные и неизвестные', exact: true }).click();
+  await expect(page.locator('.card-row')).toHaveCount(2);
   // Actual archive commands; automate only the native file-picker destination.
   const archive = path.join(dir, 'backup.zip');
   await app.evaluate(({ dialog }, file) => {
@@ -269,7 +304,7 @@ try {
         passed: true,
         platform: process.platform,
         security,
-        checks: 23,
+        checks: 29,
         rendererErrors: errors,
         externalRequests: networkRequests,
       },

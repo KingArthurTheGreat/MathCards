@@ -104,7 +104,7 @@ export function Settings() {
         <h2>
           <ShieldCheck size={20} /> Всё остаётся на вашем компьютере
         </h2>
-        <p>MathCards 1.0.0 · Регистрация и подключение к интернету не нужны.</p>
+        <p>MathCards 1.1.0 · Регистрация и подключение к интернету не нужны.</p>
         <label>
           Каталог данных<code className="data-path">{data.dataPath}</code>
         </label>

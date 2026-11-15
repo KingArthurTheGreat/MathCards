@@ -35,6 +35,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       );
   }, [refresh, task]);
   useEffect(() => {
+    if (!window.mathcards) return;
+    const timer = setInterval(() => void task(refresh), 60_000);
+    return () => clearInterval(timer);
+  }, [refresh, task]);
+  useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(''), 4000);
     return () => clearTimeout(timer);
