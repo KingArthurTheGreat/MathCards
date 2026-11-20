@@ -87,6 +87,7 @@ export interface Commands {
   import: { input: undefined; output: number | null };
 }
 export interface Bridge {
+  imageUrl?(src: string): string;
   invoke<K extends keyof Commands>(
     command: K,
     payload: Commands[K]['input'],

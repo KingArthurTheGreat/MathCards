@@ -102,15 +102,14 @@ export function Settings() {
       </section>
       <section className="panel settings-section">
         <h2>
-          <ShieldCheck size={20} /> Всё остаётся на вашем компьютере
+          <ShieldCheck size={20} /> Всё остаётся на вашем устройстве
         </h2>
         <p>MathCards 1.1.0 · Регистрация и подключение к интернету не нужны.</p>
         <label>
           Каталог данных<code className="data-path">{data.dataPath}</code>
         </label>
         <p className="small muted">
-          База mathcards.sqlite и папка images. Для переноса используйте ZIP-экспорт. Обновление
-          приложения не удаляет данные.
+          Для переноса используйте ZIP-экспорт. Обновление приложения не удаляет данные.
         </p>
       </section>
       {remove && (

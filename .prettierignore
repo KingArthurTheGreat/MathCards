@@ -4,3 +4,6 @@ dist-electron
 release
 test-results
 package-lock.json
+dist-mobile
+android
+ios

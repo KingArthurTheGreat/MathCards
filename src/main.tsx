@@ -21,6 +21,10 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { err
     );
   }
 }
+if (import.meta.env.MODE === 'mobile') {
+  const { installMobileBridge } = await import('./mobile/bridge');
+  installMobileBridge();
+}
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>

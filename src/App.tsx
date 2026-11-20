@@ -80,6 +80,23 @@ export default function App() {
     return <CardEditor card={editor.card} deckId={deckId} onClose={() => setEditor(undefined)} />;
   return (
     <div className="app-shell">
+      <header className="mobile-nav">
+        <button className="brand" onClick={() => navigate('home')}>
+          <span className="logo">∫</span>MathCards
+        </button>
+        <select
+          aria-label="Раздел приложения"
+          value={page}
+          onChange={(e) => navigate(e.target.value as Page)}
+        >
+          {nav.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+          <option value="settings">Настройки</option>
+        </select>
+      </header>
       <aside className="sidebar">
         <button className="brand" onClick={() => navigate('home')}>
           <span className="logo">∫</span>
@@ -258,7 +275,7 @@ export default function App() {
           <h3>Математика становится понятнее с практикой.</h3>
           <p className="muted">
             Создавайте карточки с формулами и фотографиями, выбирайте нужные и проверяйте себя. Всё
-            сохраняется на вашем компьютере.
+            сохраняется на вашем устройстве.
           </p>
           <p>Начать с семи примеров о пределах и непрерывности?</p>
           <div className="modal-actions">

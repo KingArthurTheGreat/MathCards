@@ -1,0 +1,6 @@
+{
+  "appId": "org.mathcards.mobile",
+  "appName": "MathCards",
+  "webDir": "dist-mobile",
+  "ios": { "contentInset": "automatic" }
+}

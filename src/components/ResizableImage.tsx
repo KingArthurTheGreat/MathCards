@@ -58,7 +58,7 @@ function ImageView({ node, selected, updateAttributes, editor, getPos }: NodeVie
       contentEditable={false}
     >
       <img
-        src={node.attrs.src}
+        src={window.mathcards.imageUrl?.(node.attrs.src) ?? node.attrs.src}
         alt={node.attrs.alt || 'Фотография конспекта'}
         onClick={select}
         data-drag-handle

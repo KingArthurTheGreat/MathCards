@@ -1860,3 +1860,160 @@ kbd {
   padding: 20px;
   margin-bottom: 22px;
 }
+
+.mobile-nav {
+  display: none;
+}
+@media (max-width: 800px) {
+  .sidebar,
+  .topbar,
+  .math-art {
+    display: none;
+  }
+  .app-shell {
+    display: block;
+  }
+  .mobile-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-nav .brand {
+    padding: 0;
+    font-size: 18px;
+  }
+  .mobile-nav select {
+    width: auto;
+    max-width: 48%;
+    font-size: 16px;
+  }
+  .main-area {
+    margin: 0;
+  }
+  .page,
+  .study-page,
+  .study-summary {
+    padding: 20px 16px;
+  }
+  .hero {
+    min-height: auto;
+  }
+  .hero-copy {
+    padding: 20px;
+  }
+  .page-heading,
+  .study-header,
+  .resume-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .page-heading > .actions {
+    max-width: 100%;
+    justify-content: flex-start;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .deck-grid,
+  .preview-grid,
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .span-2 {
+    grid-column: auto;
+  }
+  .filters,
+  .selection-toolbar,
+  .study-controls,
+  .history-row {
+    flex-wrap: wrap;
+  }
+  .filters .search {
+    flex-basis: 100%;
+  }
+  .filters select {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .table-head {
+    display: none;
+  }
+  .card-row {
+    min-width: 0;
+    grid-template-columns: 20px 1fr auto;
+    gap: 8px;
+    padding: 14px 10px;
+  }
+  .card-info {
+    grid-column: 2/4;
+    min-width: 0;
+  }
+  .card-title {
+    white-space: normal;
+    text-align: left;
+  }
+  .card-row > .type-tag {
+    grid-column: 2;
+  }
+  .row-actions {
+    grid-column: 2/4;
+    justify-content: flex-end;
+    opacity: 1;
+  }
+  .ratings {
+    width: 100%;
+    gap: 5px;
+  }
+  .ratings button {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 3px;
+  }
+  .reveal {
+    min-width: 0;
+    flex: 1;
+  }
+  .result-grid,
+  .theme-options {
+    gap: 6px;
+  }
+  .theme-options button,
+  .result {
+    min-width: 0;
+    padding: 14px 6px;
+  }
+  .flashcard-content {
+    padding: 16px;
+  }
+  .selection-bar .actions,
+  .modal-actions,
+  .settings-section .actions {
+    flex-wrap: wrap;
+  }
+  .modal {
+    padding: 19px;
+  }
+  .settings-section,
+  .chart-panel,
+  .history {
+    padding: 17px;
+  }
+  .hero button,
+  .stat-card,
+  .section-heading button,
+  .selection-bar button {
+    white-space: normal;
+  }
+  input:not([type='checkbox']),
+  select,
+  textarea,
+  .tiptap {
+    font-size: 16px;
+  }
+}

@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { docSchema } from '../shared/validation';
 import katex from 'katex';
-import { demoDecks } from '../electron/demo';
+import { demoDecks } from '../shared/demo';
 import type { Doc } from '../shared/model';
 it('rejects malformed rich text that could crash renderer or editor', () => {
   for (const value of [0, false, '', null]) {

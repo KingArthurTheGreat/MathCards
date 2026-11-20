@@ -50,7 +50,7 @@ export function Content({ doc }: { doc: Doc }) {
       return (
         <img
           key={key}
-          src={String(n.attrs?.src)}
+          src={window.mathcards.imageUrl?.(String(n.attrs?.src)) ?? String(n.attrs?.src)}
           style={{ width: `${n.attrs?.width ?? 100}%` }}
           alt={String(n.attrs?.alt ?? 'Фотография конспекта')}
           tabIndex={0}
@@ -82,7 +82,7 @@ export function Content({ doc }: { doc: Doc }) {
       <div className="rich-content">{render(doc, 0)}</div>
       {zoom && (
         <Modal title="Фотография конспекта" wide onClose={() => setZoom(undefined)}>
-          <img className="zoom-image" src={zoom} alt="Фотография в полном размере" />
+          <img className="zoom-image" src={window.mathcards.imageUrl?.(zoom) ?? zoom} alt="Фотография в полном размере" />
         </Modal>
       )}
     </>
