@@ -6,6 +6,10 @@ on:
         description: Git tag or commit to package
         required: true
         default: v1.1.0
+      upload_to_release:
+        description: Upload verified files to the existing release for this tag
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -38,21 +42,21 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y libfuse2 xvfb libgtk-3-0 libnss3 libasound2
-          npx --no-install electron-builder --linux AppImage --x64 --publish never '-c.linux.category=Education' '-c.linux.artifactName=MathCards-${version}-linux-x86_64.${ext}'
+          npx --no-install electron-builder --linux AppImage --x64 --publish never -c.toolsets.appimage=1.0.3 '-c.linux.category=Education' '-c.linux.artifactName=MathCards-${version}-linux-x86_64.${ext}'
           image=(release/*.AppImage)
           xvfb-run -a node scripts/smoke-packaged.mjs "${image[0]}"
       - name: Package and test universal macOS DMG
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          npx --no-install electron-builder --mac dmg --universal --publish never '-c.mac.artifactName=MathCards-${version}-mac-universal.${ext}'
+          npx --no-install electron-builder --mac dmg --universal --publish never -c.mac.identity=- -c.mac.hardenedRuntime=false '-c.mac.artifactName=MathCards-${version}-mac-universal.${ext}'
           image=(release/*.dmg)
           hdiutil verify "${image[0]}"
           mount_dir="$(mktemp -d)"
           hdiutil attach -readonly -nobrowse -mountpoint "$mount_dir" "${image[0]}"
           trap 'hdiutil detach "$mount_dir"' EXIT
           app="$mount_dir/MathCards.app"
-          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/MathCards"
+          lipo "$app/Contents/MacOS/MathCards" -verify_arch arm64 x86_64
           codesign --verify --deep --strict "$app"
           node scripts/smoke-packaged.mjs "$app/Contents/MacOS/MathCards"
       - uses: actions/upload-artifact@v4
@@ -62,3 +66,21 @@ jobs:
             release/*.dmg
             release/*.AppImage
           if-no-files-found: error
+
+  publish:
+    needs: package
+    if: inputs.upload_to_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: MathCards-*
+          merge-multiple: true
+          path: packages
+      - name: Attach verified installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.ref }}
+        run: gh release upload "$RELEASE_TAG" packages/*.dmg packages/*.AppImage --repo "$GITHUB_REPOSITORY"
