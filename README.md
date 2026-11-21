@@ -1,12 +1,23 @@
 # MathCards
 
-Приложение для Windows, macOS, Android и iPhone для изучения математического анализа на русском языке. Карточки с форматированным текстом, LaTeX и фотографиями; ручное повторение выбранных карточек; SQLite и локальные резервные копии. Сервер, учётная запись и интернет во время использования не нужны.
+Карточки для изучения математического анализа с формулами LaTeX, фотографиями и интервальными повторениями. Библиотека и история занятий хранятся на устройстве.
+
+## Скачать MathCards 1.1.0
+
+| Платформа                         | Скачать                                                                                                                                        | Как установить                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Windows x64                       | [Установщик Windows (.exe)](https://github.com/KingArthurTheGreat/MathCards/releases/download/v1.1.0/MathCards-Setup-1.1.0.exe)                | Запустите установщик.                                   |
+| Android 7+                        | [Приложение Android (.apk)](https://github.com/KingArthurTheGreat/MathCards/releases/download/mobile-1.1.0/MathCards-Android-1.1.0.apk)        | Откройте APK на телефоне.                               |
+| macOS 13+ · Apple Silicon и Intel | [Образ macOS (.dmg)](https://github.com/KingArthurTheGreat/MathCards/releases/download/v1.1.0/MathCards-1.1.0-mac-universal.dmg)               | Откройте DMG и перетащите MathCards в «Программы».      |
+| Linux x86-64                      | [Приложение Linux (.AppImage)](https://github.com/KingArthurTheGreat/MathCards/releases/download/v1.1.0/MathCards-1.1.0-linux-x86_64.AppImage) | В свойствах файла разрешите выполнение и запустите его. |
+
+Сборка для macOS подписана локально (ad hoc) и не прошла нотарификацию Apple. При первом запуске система может запросить подтверждение в настройках конфиденциальности и безопасности.
 
 ## Android и iPhone
 
 Мобильные версии работают локально. Карточки, фотографии и история сохраняются на устройстве. Для переноса библиотеки между телефоном и компьютером используйте **Настройки → Экспортировать всё** на одном устройстве и **Импортировать архив** на другом.
 
-**Android**. Откройте [Mobile builds](https://github.com/KingArthurTheGreat/MathCards/actions/workflows/mobile.yml), выберите успешную сборку и скачайте артефакт **MathCards-Android**. Распакуйте ZIP и откройте APK на телефоне с Android 7 или новее и актуальным Android System WebView. Это отладочная сборка. Ключи подписи разных запусков CI могут отличаться, поэтому перед переустановкой экспортируйте библиотеку.
+**Android**. Для работы нужен актуальный Android System WebView. Это отладочная сборка. Ключи подписи разных запусков CI могут отличаться, поэтому перед переустановкой экспортируйте библиотеку.
 
 **iPhone**. Для установки из исходников нужны Mac с Xcode 26+, iPhone с iOS 17+ и Apple ID для подписи. В корне репозитория выполните:
 
@@ -20,7 +31,7 @@ npx cap open ios
 
 Для локальной сборки Android после `npm run mobile:sync` откройте проект через `npx cap open android` или выполните `cd android && ./gradlew assembleDebug` с JDK 21 и Android SDK 36. После изменения интерфейса повторите `npm run mobile:sync`, чтобы обновить ресурсы обоих проектов.
 
-## Быстрый запуск на macOS или Windows
+## Запуск из исходников на Windows, macOS и Linux
 
 Нужен Node.js **24 LTS** и npm. Для разработки подходят также Node.js 22.16+ (локальные проверки выполнены на 22.23.4). Первый `npm ci`/запуск загружает зависимости и Electron из интернета. После установки приложение работает автономно.
 
@@ -46,11 +57,11 @@ npm run pack:mac   # локальная .app для macOS, без подписи
 
 ### GitHub Actions — рекомендуемый способ
 
-Готовая версия **1.1.0**: [скачать установщик или portable EXE из Releases](https://github.com/KingArthurTheGreat/MathCards/releases/tag/v1.1.0). Для доступа войдите в GitHub под учётной записью с доступом к приватному репозиторию. [Windows CI от 15 ноября 2026](https://github.com/KingArthurTheGreat/MathCards/actions/runs/43705717891) завершился успешно. Копия файлов также доступна в [Actions Artifact](https://github.com/KingArthurTheGreat/MathCards/actions/runs/43705717891/artifacts/14157998348).
+Готовая версия **1.1.0**: [скачать установщик или portable EXE из Releases](https://github.com/KingArthurTheGreat/MathCards/releases/tag/v1.1.0). [Windows CI от 15 ноября 2026](https://github.com/KingArthurTheGreat/MathCards/actions/runs/43705717891) завершился успешно. Копия файлов также доступна в [Actions Artifact](https://github.com/KingArthurTheGreat/MathCards/actions/runs/43705717891/artifacts/14157998348).
 
 Для повторной сборки:
 
-1. Откройте приватный репозиторий [KingArthurTheGreat/MathCards](https://github.com/KingArthurTheGreat/MathCards). Исходники и workflow находятся в ветке `main`.
+1. Откройте репозиторий [KingArthurTheGreat/MathCards](https://github.com/KingArthurTheGreat/MathCards). Исходники и workflow находятся в ветке `main`.
 2. Откройте **Actions → Windows installer → Run workflow**. Workflow также запускается при push в `main`/`master`, тегах `v*` и pull request.
 3. Дождитесь успешного завершения: установка зависимостей, TypeScript, Vitest, production-сборка, Electron E2E и упаковка.
 4. Внизу страницы запуска скачайте **Artifacts → MathCards-Windows-x64-unsigned** (или `signed` для подписанной сборки) и распакуйте архив.
